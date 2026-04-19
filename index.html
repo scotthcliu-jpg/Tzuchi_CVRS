@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>慈濟訪視系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #3a8a7e; --teal-light: #e8f5f3; --teal-mid: #5bab9e;
+    --amber: #e8945a; --amber-light: #fdf3ec; --cream: #faf8f5;
+    --text: #2d3a38; --text-muted: #7a9490; --border: #d4e8e5;
+    --white: #ffffff; --shadow: 0 4px 20px rgba(58,138,126,0.10);
+    --radius: 18px; --radius-sm: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans TC', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+
+  /* Role Selector */
+  #role-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 32px 24px; width: 100%; max-width: 480px; margin: auto; }
+  .logo-area { text-align: center; margin-bottom: 48px; }
+  .logo-area .logo-icon { width: 72px; height: 72px; background: linear-gradient(135deg, var(--teal), var(--teal-mid)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 32px; box-shadow: 0 8px 24px rgba(58,138,126,0.25); }
+  .logo-area h1 { font-size: 22px; font-weight: 700; color: var(--teal); letter-spacing: 2px; }
+  .logo-area p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+  .role-cards { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+  .role-card { background: var(--white); border-radius: var(--radius); padding: 28px 24px; display: flex; align-items: center; gap: 20px; box-shadow: var(--shadow); cursor: pointer; border: 2px solid transparent; transition: all 0.25s ease; }
+  .role-card:hover { border-color: var(--teal); transform: translateY(-2px); }
+  .role-card .card-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+  .role-card.volunteer .card-icon { background: var(--teal-light); }
+  .role-card.manager .card-icon { background: var(--amber-light); }
+  .role-card .card-text h2 { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .role-card .card-text p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+  /* Top Bar */
+  .top-bar { background: linear-gradient(135deg, var(--teal) 0%, var(--teal-mid) 100%); color: white; padding: 20px 20px 28px; width: 100%; }
+  .top-bar-inner { max-width: 480px; margin: auto; }
+  .top-bar .back-btn { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 4px; }
+  .top-bar h2 { font-size: 20px; font-weight: 700; }
+  .top-bar .date-label { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+
+  /* Main */
+  .main { width: 100%; max-width: 480px; margin: auto; padding: 20px 16px 40px; }
+  .section-title { font-size: 14px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 12px; display: flex; align-items: center; gap: 8px; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* Visit Cards */
+  .visit-card { background: var(--white); border-radius: var(--radius); padding: 18px; margin-bottom: 12px; box-shadow: var(--shadow); border-left: 4px solid var(--teal); transition: all 0.2s; }
+  .visit-card:hover { transform: translateY(-1px); }
+  .visit-card.afternoon { border-left-color: var(--amber); }
+  .visit-card .vc-header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .visit-card .vc-name { font-size: 17px; font-weight: 700; }
+  .visit-card .vc-time { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: var(--teal-light); color: var(--teal); }
+  .visit-card.afternoon .vc-time { background: var(--amber-light); color: var(--amber); }
+  .visit-card .vc-addr { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+  .visit-card .vc-tags { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .vc-tag { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--teal-light); color: var(--teal); font-weight: 500; }
+  .visit-card .vc-actions { display: flex; gap: 8px; margin-top: 14px; }
+
+  /* Buttons */
+  .btn-sm { flex: 1; padding: 9px 6px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: all 0.2s; }
+  .btn-record { background: var(--teal); color: white; }
+  .btn-record:hover { background: #2d7068; }
+  .btn-photo { background: var(--teal-light); color: var(--teal); }
+  .btn-photo:hover { background: #c8e6e2; }
+  .btn-qr { background: var(--amber-light); color: var(--amber); }
+  .btn-qr:hover { background: #f5d9c4; }
+  .btn-profile { background: #f0eaf8; color: #7b5ea7; }
+  .btn-profile:hover { background: #e0d4f0; }
+  .btn-outcome { background: #fce8e8; color: #c0392b; }
+  .btn-outcome:hover { background: #f5cccc; }
+  .btn-primary { width: 100%; padding: 14px; background: var(--teal); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 16px; transition: background 0.2s; }
+  .btn-primary:hover { background: #2d7068; }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; padding: 24px; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: white; border-radius: var(--radius); padding: 28px 24px; width: 100%; max-width: 360px; text-align: center; position: relative; }
+  .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .modal .modal-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+  .modal .close-btn { position: absolute; top: 14px; right: 16px; background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted); }
+  .qr-box { width: 200px; height: 200px; margin: 0 auto 16px; background: #f0f0f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .qr-box svg { width: 180px; height: 180px; }
+  .volunteer-list { text-align: left; margin-top: 16px; }
+  .volunteer-list h4 { font-size: 13px; font-weight: 700; color: var(--teal); margin-bottom: 8px; }
+  .vol-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .vol-item:last-child { border-bottom: none; }
+  .vol-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--teal-light); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .vol-time { margin-left: auto; font-size: 12px; color: var(--text-muted); }
+
+  /* Record Modal */
+  .record-modal .method-btns { display: flex; gap: 10px; margin-bottom: 16px; }
+  .method-btn { flex: 1; padding: 12px; border-radius: var(--radius-sm); border: 2px solid var(--border); background: white; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .method-btn .mb-icon { font-size: 24px; }
+  .method-btn.active { border-color: var(--teal); background: var(--teal-light); color: var(--teal); }
+  .canvas-wrap { border: 2px solid var(--border); border-radius: var(--radius-sm); background: #fffef9; touch-action: none; }
+  #draw-canvas { display: block; border-radius: var(--radius-sm); cursor: crosshair; }
+  .canvas-toolbar { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+  .pen-size { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border); background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .pen-size.active { border-color: var(--teal); background: var(--teal-light); }
+  .canvas-clear { margin-left: auto; background: none; border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer; color: var(--text-muted); }
+  .voice-area { text-align: center; padding: 20px; border: 2px solid var(--border); border-radius: var(--radius-sm); background: #fffef9; }
+  .voice-btn { width: 72px; height: 72px; border-radius: 50%; background: var(--teal); border: none; color: white; font-size: 30px; cursor: pointer; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 4px 16px rgba(58,138,126,0.3); }
+  .voice-btn.recording { background: #e05252; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+  .voice-transcript { min-height: 80px; font-size: 14px; line-height: 1.7; color: var(--text); text-align: left; background: white; border-radius: 8px; padding: 12px; border: 1px solid var(--border); margin-top: 12px; }
+  .voice-status { font-size: 13px; color: var(--text-muted); }
+
+  /* Photo */
+  .photo-upload-area { border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 32px 16px; text-align: center; cursor: pointer; background: #fffef9; transition: all 0.2s; }
+  .photo-upload-area:hover { border-color: var(--teal); background: var(--teal-light); }
+  .photo-upload-area .upload-icon { font-size: 36px; margin-bottom: 8px; }
+  .photo-upload-area p { font-size: 14px; color: var(--text-muted); }
+  #photo-input { display: none; }
+  .photo-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 12px; }
+  .photo-thumb { aspect-ratio: 1; border-radius: 8px; background: var(--teal-light); display: flex; align-items: center; justify-content: center; font-size: 24px; overflow: hidden; }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Profile / Outcome Modal */
+  .info-modal { text-align: left; }
+  .info-modal h3 { text-align: center; }
+  .info-modal .modal-sub { text-align: center; }
+  .info-section { margin-bottom: 18px; }
+  .info-section-title { font-size: 12px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
+  .info-row { display: flex; gap: 8px; margin-bottom: 8px; font-size: 14px; line-height: 1.5; }
+  .info-label { color: var(--text-muted); flex-shrink: 0; width: 72px; font-size: 13px; }
+  .info-value { color: var(--text); font-weight: 500; flex: 1; }
+  .member-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+  .member-chip { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: #f0eaf8; color: #7b5ea7; font-weight: 500; }
+  .need-item { background: #fffef9; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; line-height: 1.6; }
+  .need-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-bottom: 4px; }
+  .need-urgent { background: #fce8e8; color: #c0392b; }
+  .need-normal { background: var(--teal-light); color: var(--teal); }
+  .outcome-item { border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; font-size: 13px; line-height: 1.7; border-left: 4px solid; }
+  .outcome-approved { background: #e8f5e9; border-left-color: #388e3c; }
+  .outcome-referral { background: #e3f2fd; border-left-color: #1565c0; }
+  .outcome-item .outcome-type { font-size: 11px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+  .followup-list { list-style: none; padding: 0; }
+  .followup-list li { display: flex; align-items: flex-start; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .followup-list li:last-child { border-bottom: none; }
+  .followup-list li::before { content: '→'; color: var(--amber); font-weight: 700; }
+
+  /* Manager */
+  .stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 8px; }
+  .stat-card { background: white; border-radius: var(--radius-sm); padding: 16px 12px; text-align: center; box-shadow: var(--shadow); }
+  .stat-card .stat-num { font-size: 28px; font-weight: 700; color: var(--teal); }
+  .stat-card .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .stat-card.amber .stat-num { color: var(--amber); }
+  .mgr-visit-card { background: white; border-radius: var(--radius); padding: 16px 18px; margin-bottom: 10px; box-shadow: var(--shadow); }
+  .mgr-vc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .mgr-vc-header h4 { font-size: 16px; font-weight: 700; }
+  .status-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+  .status-done { background: #e8f5e9; color: #388e3c; }
+  .status-pending { background: #fff3e0; color: #e65100; }
+  .vol-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .vol-chip { font-size: 12px; padding: 3px 10px; border-radius: 20px; background: var(--teal-light); color: var(--teal); font-weight: 500; }
+
+  /* Screens */
+  .screen { display: none; width: 100%; }
+  .screen.active { display: block; }
+  #role-screen { display: flex; }
+
+  /* Tab bar */
+  .tab-bar { display: flex; border-bottom: 2px solid var(--border); max-width: 480px; margin: 0 auto 16px; padding: 0 4px; }
+  .tab-btn { flex: 1; padding: 10px 8px; font-size: 14px; font-weight: 600; border: none; background: none; cursor: pointer; color: var(--text-muted); border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+  .tab-btn.active { color: var(--teal); border-bottom-color: var(--teal); }
+
+  /* ════ RWD — iPad 520px+ ════ */
+  @media (min-width: 520px) {
+    #role-screen { max-width: 580px; }
+    .logo-area { margin-bottom: 56px; }
+    .logo-area .logo-icon { width: 88px; height: 88px; font-size: 40px; }
+    .logo-area h1 { font-size: 28px; }
+    .role-cards { flex-direction: row; gap: 20px; }
+    .role-card { flex: 1; flex-direction: column; text-align: center; padding: 36px 24px; }
+    .role-card .card-icon { width: 72px; height: 72px; font-size: 34px; margin: 0 auto 12px; }
+    .top-bar-inner { max-width: 100%; }
+    .top-bar { padding: 24px 32px 32px; }
+    .top-bar h2 { font-size: 24px; }
+    .top-bar .date-label { font-size: 15px; }
+    .main { max-width: 100%; padding: 28px 24px 60px; }
+    .visit-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; }
+    .visit-card { margin-bottom: 0; }
+    .visit-card .vc-name { font-size: 19px; }
+    .section-title { font-size: 15px; margin: 28px 0 14px; }
+    .stat-row { gap: 16px; margin-bottom: 20px; }
+    .stat-card { padding: 20px 16px; border-radius: var(--radius); }
+    .stat-card .stat-num { font-size: 36px; }
+    .stat-card .stat-label { font-size: 13px; }
+    .mgr-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+    .mgr-visit-card { margin-bottom: 0; }
+    .mgr-vc-header h4 { font-size: 17px; }
+    .tab-bar { max-width: 100%; }
+    .tab-btn { font-size: 15px; padding: 12px 16px; }
+    .modal { max-width: 520px; padding: 36px 32px; }
+    .modal h3 { font-size: 20px; }
+    .qr-box { width: 240px; height: 240px; }
+    .qr-box svg { width: 220px; height: 220px; }
+    .info-label { width: 80px; }
+    #draw-canvas { height: 280px; }
+    .voice-btn { width: 88px; height: 88px; font-size: 36px; }
+  }
+
+  /* ════ RWD — iPad Pro / 桌機 800px+ ════ */
+  @media (min-width: 800px) {
+    #role-screen { max-width: 800px; }
+    .logo-area h1 { font-size: 32px; letter-spacing: 4px; }
+    .role-card { padding: 44px 32px; }
+    .role-card .card-icon { width: 80px; height: 80px; font-size: 38px; }
+    .role-card .card-text h2 { font-size: 20px; }
+    .role-card .card-text p { font-size: 14px; }
+    .main { max-width: 100%; padding: 32px 40px 80px; }
+    .top-bar-inner { max-width: 100%; }
+    .top-bar { padding: 28px 40px 36px; }
+    .top-bar h2 { font-size: 26px; }
+    .visit-grid { gap: 20px; }
+    .visit-card { padding: 22px; }
+    .visit-card .vc-name { font-size: 20px; }
+    .mgr-grid { gap: 18px; }
+    .stat-card .stat-num { font-size: 44px; }
+    .stat-card .stat-label { font-size: 14px; }
+    .tab-bar { max-width: 100%; }
+    .tab-btn { font-size: 16px; }
+    .modal { max-width: 600px; }
+    .photo-grid { grid-template-columns: repeat(4,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ROLE SELECTION -->
+<div id="role-screen">
+  <div class="logo-area">
+    <div class="logo-icon">🪷</div>
+    <h1>慈濟訪視系統</h1>
+    <p>請選擇您的身份</p>
+  </div>
+  <div class="role-cards">
+    <div class="role-card volunteer" onclick="showScreen('volunteer-screen')">
+      <div class="card-icon">🙏</div>
+      <div class="card-text"><h2>訪視志工</h2><p>查看今日案家、掃描簽到<br>填寫訪視記錄與上傳照片</p></div>
+    </div>
+    <div class="role-card manager" onclick="showScreen('manager-screen')">
+      <div class="card-icon">📋</div>
+      <div class="card-text"><h2>幹部管理</h2><p>掌握今日所有案家進度<br>即時查看志工出席狀況</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- VOLUNTEER SCREEN -->
+<div id="volunteer-screen" class="screen">
+  <div class="top-bar">
+    <div class="top-bar-inner">
+      <button class="back-btn" onclick="showRole()">← 返回</button>
+      <h2>🙏 今日訪視行程</h2>
+      <div class="date-label" id="vol-date"></div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="section-title">🌤 上午場次</div>
+    <div class="visit-grid">
+      <div class="visit-card" id="vc1">
+        <div class="vc-header"><div class="vc-name">王阿嬤</div><div class="vc-time">09:00 – 10:30</div></div>
+        <div class="vc-addr">📍 台北市大安區仁愛路三段 12 號 4 樓</div>
+        <div class="vc-tags"><span class="vc-tag">獨居老人</span><span class="vc-tag">行動不便</span><span class="vc-tag">低收入</span></div>
+        <div class="vc-actions">
+          <button class="btn-sm btn-qr" onclick="openQR('王阿嬤')">📱 簽到</button>
+          <button class="btn-sm btn-record" onclick="openRecord('王阿嬤')">✏️ 記錄</button>
+          <button class="btn-sm btn-photo" onclick="openPhoto('王阿嬤')">📷 照片</button>
+        </div>
+        <div class="vc-actions" style="margin-top:6px">
+          <button class="btn-sm btn-profile" onclick="openProfile('wang')">👤 案家資料</button>
+          <button class="btn-sm btn-outcome" onclick="openOutcome('wang')">📄 處遇結論</button>
+        </div>
+      </div>
+      <div class="visit-card" id="vc2">
+        <div class="vc-header"><div class="vc-name">李先生</div><div class="vc-time">10:30 – 12:00</div></div>
+        <div class="vc-addr">📍 台北市信義區松仁路 88 號 2 樓</div>
+        <div class="vc-tags"><span class="vc-tag">身心障礙</span><span class="vc-tag">中低收入</span></div>
+        <div class="vc-actions">
+          <button class="btn-sm btn-qr" onclick="openQR('李先生')">📱 簽到</button>
+          <button class="btn-sm btn-record" onclick="openRecord('李先生')">✏️ 記錄</button>
+          <button class="btn-sm btn-photo" onclick="openPhoto('李先生')">📷 照片</button>
+        </div>
+        <div class="vc-actions" style="margin-top:6px">
+          <button class="btn-sm btn-profile" onclick="openProfile('li')">👤 案家資料</button>
+          <button class="btn-sm btn-outcome" onclick="openOutcome('li')">📄 處遇結論</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">🌇 下午場次</div>
+    <div class="visit-grid">
+      <div class="visit-card afternoon" id="vc3">
+        <div class="vc-header"><div class="vc-name">陳奶奶</div><div class="vc-time">14:00 – 15:30</div></div>
+        <div class="vc-addr">📍 台北市中正區南海路 5 號 3 樓</div>
+        <div class="vc-tags"><span class="vc-tag">獨居老人</span><span class="vc-tag">慢性病</span></div>
+        <div class="vc-actions">
+          <button class="btn-sm btn-qr" onclick="openQR('陳奶奶')">📱 簽到</button>
+          <button class="btn-sm btn-record" onclick="openRecord('陳奶奶')">✏️ 記錄</button>
+          <button class="btn-sm btn-photo" onclick="openPhoto('陳奶奶')">📷 照片</button>
+        </div>
+        <div class="vc-actions" style="margin-top:6px">
+          <button class="btn-sm btn-profile" onclick="openProfile('chen')">👤 案家資料</button>
+          <button class="btn-sm btn-outcome" onclick="openOutcome('chen')">📄 處遇結論</button>
+        </div>
+      </div>
+      <div class="visit-card afternoon" id="vc4">
+        <div class="vc-header"><div class="vc-name">張家（三口之家）</div><div class="vc-time">15:30 – 17:00</div></div>
+        <div class="vc-addr">📍 台北市文山區木柵路一段 200 號</div>
+        <div class="vc-tags"><span class="vc-tag">單親家庭</span><span class="vc-tag">兒童關懷</span><span class="vc-tag">急難救助</span></div>
+        <div class="vc-actions">
+          <button class="btn-sm btn-qr" onclick="openQR('張家')">📱 簽到</button>
+          <button class="btn-sm btn-record" onclick="openRecord('張家')">✏️ 記錄</button>
+          <button class="btn-sm btn-photo" onclick="openPhoto('張家')">📷 照片</button>
+        </div>
+        <div class="vc-actions" style="margin-top:6px">
+          <button class="btn-sm btn-profile" onclick="openProfile('zhang')">👤 案家資料</button>
+          <button class="btn-sm btn-outcome" onclick="openOutcome('zhang')">📄 處遇結論</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGER SCREEN -->
+<div id="manager-screen" class="screen">
+  <div class="top-bar">
+    <div class="top-bar-inner">
+      <button class="back-btn" onclick="showRole()">← 返回</button>
+      <h2>📋 幹部總覽</h2>
+      <div class="date-label" id="mgr-date"></div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-num">4</div><div class="stat-label">今日案家</div></div>
+      <div class="stat-card"><div class="stat-num">2</div><div class="stat-label">已完成</div></div>
+      <div class="stat-card amber"><div class="stat-num">8</div><div class="stat-label">出席志工</div></div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('morning')">🌤 上午（2）</button>
+      <button class="tab-btn" onclick="switchTab('afternoon')">🌇 下午（2）</button>
+    </div>
+    <div id="tab-morning">
+      <div class="mgr-grid">
+        <div class="mgr-visit-card">
+          <div class="mgr-vc-header"><h4>王阿嬤 <span style="font-size:13px;color:var(--text-muted)">09:00</span></h4><span class="status-badge status-done">✅ 已完成</span></div>
+          <div class="vol-chips"><span class="vol-chip">🙏 林志明</span><span class="vol-chip">🙏 陳美華</span><span class="vol-chip">🙏 黃建國</span></div>
+        </div>
+        <div class="mgr-visit-card">
+          <div class="mgr-vc-header"><h4>李先生 <span style="font-size:13px;color:var(--text-muted)">10:30</span></h4><span class="status-badge status-done">✅ 已完成</span></div>
+          <div class="vol-chips"><span class="vol-chip">🙏 王淑芬</span><span class="vol-chip">🙏 張大明</span></div>
+        </div>
+      </div>
+    </div>
+    <div id="tab-afternoon" style="display:none">
+      <div class="mgr-grid">
+        <div class="mgr-visit-card">
+          <div class="mgr-vc-header"><h4>陳奶奶 <span style="font-size:13px;color:var(--text-muted)">14:00</span></h4><span class="status-badge status-pending">⏳ 進行中</span></div>
+          <div class="vol-chips"><span class="vol-chip">🙏 李雅婷</span><span class="vol-chip">🙏 吳俊賢</span></div>
+        </div>
+        <div class="mgr-visit-card">
+          <div class="mgr-vc-header"><h4>張家 <span style="font-size:13px;color:var(--text-muted)">15:30</span></h4><span class="status-badge status-pending">⏳ 待訪視</span></div>
+          <div class="vol-chips"><span class="vol-chip" style="background:#f0f0f0;color:#999">尚未簽到</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QR MODAL -->
+<div class="modal-overlay" id="qr-modal">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal('qr-modal')">✕</button>
+    <div style="font-size:32px;margin-bottom:8px">📱</div>
+    <h3 id="qr-title">志工簽到</h3>
+    <p class="modal-sub" id="qr-sub">請掃描 QR Code 完成簽到</p>
+    <div class="qr-box">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect x="5" y="5" width="30" height="30" fill="none" stroke="#2d3a38" stroke-width="4"/><rect x="12" y="12" width="16" height="16" fill="#2d3a38"/>
+        <rect x="65" y="5" width="30" height="30" fill="none" stroke="#2d3a38" stroke-width="4"/><rect x="72" y="12" width="16" height="16" fill="#2d3a38"/>
+        <rect x="5" y="65" width="30" height="30" fill="none" stroke="#2d3a38" stroke-width="4"/><rect x="12" y="72" width="16" height="16" fill="#2d3a38"/>
+        <rect x="45" y="5" width="6" height="6" fill="#2d3a38"/><rect x="53" y="5" width="6" height="6" fill="#2d3a38"/>
+        <rect x="45" y="13" width="6" height="6" fill="#2d3a38"/><rect x="45" y="21" width="14" height="6" fill="#2d3a38"/>
+        <rect x="45" y="35" width="6" height="6" fill="#2d3a38"/><rect x="53" y="35" width="6" height="6" fill="#2d3a38"/><rect x="61" y="35" width="6" height="6" fill="#2d3a38"/>
+        <rect x="45" y="45" width="6" height="6" fill="#2d3a38"/><rect x="53" y="45" width="14" height="6" fill="#2d3a38"/><rect x="45" y="53" width="22" height="6" fill="#2d3a38"/>
+        <rect x="5" y="45" width="14" height="6" fill="#2d3a38"/><rect x="21" y="45" width="6" height="6" fill="#2d3a38"/>
+        <rect x="5" y="53" width="6" height="6" fill="#2d3a38"/><rect x="13" y="53" width="14" height="6" fill="#2d3a38"/>
+        <rect x="61" y="45" width="6" height="6" fill="#2d3a38"/><rect x="69" y="45" width="22" height="6" fill="#2d3a38"/>
+        <rect x="61" y="53" width="14" height="6" fill="#2d3a38"/><rect x="77" y="53" width="6" height="6" fill="#2d3a38"/>
+        <rect x="61" y="61" width="6" height="6" fill="#2d3a38"/><rect x="69" y="61" width="6" height="6" fill="#2d3a38"/><rect x="77" y="61" width="6" height="6" fill="#2d3a38"/><rect x="85" y="61" width="6" height="6" fill="#2d3a38"/>
+        <rect x="5" y="61" width="6" height="6" fill="#2d3a38"/><rect x="13" y="61" width="14" height="6" fill="#2d3a38"/><rect x="29" y="61" width="6" height="6" fill="#2d3a38"/><rect x="37" y="61" width="6" height="6" fill="#2d3a38"/><rect x="45" y="61" width="6" height="6" fill="#2d3a38"/><rect x="53" y="61" width="6" height="6" fill="#2d3a38"/>
+        <rect x="61" y="69" width="22" height="6" fill="#2d3a38"/><rect x="85" y="69" width="6" height="6" fill="#2d3a38"/>
+        <rect x="37" y="69" width="6" height="6" fill="#2d3a38"/><rect x="45" y="69" width="14" height="6" fill="#2d3a38"/><rect x="5" y="69" width="22" height="6" fill="#2d3a38"/>
+        <rect x="29" y="77" width="6" height="6" fill="#2d3a38"/><rect x="37" y="77" width="14" height="6" fill="#2d3a38"/><rect x="53" y="77" width="6" height="6" fill="#2d3a38"/>
+        <rect x="61" y="77" width="6" height="6" fill="#2d3a38"/><rect x="69" y="77" width="6" height="6" fill="#2d3a38"/><rect x="77" y="77" width="14" height="6" fill="#2d3a38"/>
+        <rect x="5" y="77" width="6" height="6" fill="#2d3a38"/><rect x="13" y="77" width="6" height="6" fill="#2d3a38"/>
+        <rect x="37" y="85" width="6" height="6" fill="#2d3a38"/><rect x="45" y="85" width="6" height="6" fill="#2d3a38"/><rect x="53" y="85" width="14" height="6" fill="#2d3a38"/>
+        <rect x="69" y="85" width="22" height="6" fill="#2d3a38"/><rect x="5" y="85" width="14" height="6" fill="#2d3a38"/><rect x="21" y="85" width="6" height="6" fill="#2d3a38"/>
+      </svg>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Activity ID：TZC-<span id="qr-id"></span></p>
+    <div class="volunteer-list">
+      <h4>📋 已簽到志工（3人）</h4>
+      <div class="vol-item"><div class="vol-avatar">林</div>林志明<span class="vol-time">09:02</span></div>
+      <div class="vol-item"><div class="vol-avatar">陳</div>陳美華<span class="vol-time">09:05</span></div>
+      <div class="vol-item"><div class="vol-avatar">黃</div>黃建國<span class="vol-time">09:08</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- RECORD MODAL -->
+<div class="modal-overlay" id="record-modal">
+  <div class="modal record-modal" style="max-height:90vh;overflow-y:auto">
+    <button class="close-btn" onclick="closeModal('record-modal')">✕</button>
+    <h3 id="record-title">訪視記錄</h3>
+    <p class="modal-sub" id="record-sub">選擇記錄方式</p>
+    <div class="method-btns">
+      <button class="method-btn active" id="btn-handwrite" onclick="switchMethod('handwrite')"><span class="mb-icon">✍️</span>手寫記錄</button>
+      <button class="method-btn" id="btn-voice" onclick="switchMethod('voice')"><span class="mb-icon">🎙️</span>語音轉文字</button>
+    </div>
+    <div id="method-handwrite">
+      <div class="canvas-wrap"><canvas id="draw-canvas" width="320" height="200"></canvas></div>
+      <div class="canvas-toolbar">
+        <div class="pen-size active" onclick="setPen(2,this)"><div style="width:6px;height:6px;background:#2d3a38;border-radius:50%"></div></div>
+        <div class="pen-size" onclick="setPen(4,this)"><div style="width:10px;height:10px;background:#2d3a38;border-radius:50%"></div></div>
+        <div class="pen-size" onclick="setPen(7,this)"><div style="width:15px;height:15px;background:#2d3a38;border-radius:50%"></div></div>
+        <button class="canvas-clear" onclick="clearCanvas()">清除</button>
+      </div>
+    </div>
+    <div id="method-voice" style="display:none">
+      <div class="voice-area">
+        <button class="voice-btn" id="voice-btn" onclick="toggleVoice()">🎙️</button>
+        <div class="voice-status" id="voice-status">點擊麥克風開始錄音</div>
+        <div class="voice-transcript" id="voice-transcript">（語音記錄將顯示於此）</div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveRecord()">💾 儲存記錄</button>
+  </div>
+</div>
+
+<!-- PHOTO MODAL -->
+<div class="modal-overlay" id="photo-modal">
+  <div class="modal" style="max-height:90vh;overflow-y:auto">
+    <button class="close-btn" onclick="closeModal('photo-modal')">✕</button>
+    <h3 id="photo-title">上傳訪視照片</h3>
+    <p class="modal-sub" id="photo-sub">可上傳多張照片</p>
+    <div class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
+      <div class="upload-icon">📷</div>
+      <p>點擊選擇照片<br><span style="font-size:12px">或拍攝新照片</span></p>
+    </div>
+    <input type="file" id="photo-input" accept="image/*" multiple onchange="previewPhotos(this)">
+    <div class="photo-grid" id="photo-grid"></div>
+    <button class="btn-primary" onclick="uploadPhotos()">📤 上傳照片</button>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal info-modal" style="max-height:90vh;overflow-y:auto">
+    <button class="close-btn" onclick="closeModal('profile-modal')">✕</button>
+    <div style="font-size:28px;text-align:center;margin-bottom:6px">👤</div>
+    <h3 id="profile-name">案家資料</h3>
+    <p class="modal-sub" id="profile-sub"></p>
+    <div class="info-section">
+      <div class="info-section-title">🪪 基本資料</div>
+      <div class="info-row"><span class="info-label">姓名</span><span class="info-value" id="p-name"></span></div>
+      <div class="info-row"><span class="info-label">年齡</span><span class="info-value" id="p-age"></span></div>
+      <div class="info-row"><span class="info-label">電話</span><span class="info-value" id="p-phone"></span></div>
+      <div class="info-row"><span class="info-label">地址</span><span class="info-value" id="p-addr"></span></div>
+      <div class="info-row"><span class="info-label">身分類別</span><span class="info-value" id="p-type"></span></div>
+    </div>
+    <div class="info-section">
+      <div class="info-section-title">👨‍👩‍👧 家庭成員</div>
+      <div class="member-chips" id="p-members"></div>
+    </div>
+    <div class="info-section">
+      <div class="info-section-title">🏥 健康狀況</div>
+      <div class="info-row"><span class="info-value" id="p-health"></span></div>
+    </div>
+    <div class="info-section">
+      <div class="info-section-title">📋 上次訪視需求（<span id="p-last-date"></span>）</div>
+      <div id="p-needs"></div>
+    </div>
+  </div>
+</div>
+
+<!-- OUTCOME MODAL -->
+<div class="modal-overlay" id="outcome-modal">
+  <div class="modal info-modal" style="max-height:90vh;overflow-y:auto">
+    <button class="close-btn" onclick="closeModal('outcome-modal')">✕</button>
+    <div style="font-size:28px;text-align:center;margin-bottom:6px">📄</div>
+    <h3 id="outcome-name">處遇結論</h3>
+    <p class="modal-sub" id="outcome-sub"></p>
+    <div class="info-section">
+      <div class="info-section-title">✅ 慈濟內部決議</div>
+      <div id="o-decisions"></div>
+    </div>
+    <div class="info-section">
+      <div class="info-section-title">🗓 後續追蹤項目</div>
+      <ul class="followup-list" id="o-followups"></ul>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Data ──
+const caseData = {
+  wang: { name:'王秀英女士', age:'78 歲', phone:'02-2345-6789', addr:'台北市大安區仁愛路三段 12 號 4 樓', type:'低收入戶・獨居老人', members:['本人（獨居）'], health:'高血壓、糖尿病，每月定期至台大醫院回診。右腳行動不便，需輔助器具。近期有跌倒風險，居家安全需關注。', lastDate:'2025年12月18日', needs:[{urgent:true,text:'冬季禦寒衣物（大衣、毛毯各一）'},{urgent:true,text:'輔助拐杖損壞，需協助更換'},{urgent:false,text:'申請居家照顧服務補助（尚未辦理）'},{urgent:false,text:'希望增加訪視頻率，減少孤獨感'}] },
+  li:   { name:'李國強先生', age:'54 歲', phone:'0912-345-678', addr:'台北市信義區松仁路 88 號 2 樓', type:'中低收入戶・身心障礙（肢體二級）', members:['本人','配偶李美玲（50歲）'], health:'車禍後遺症，下肢癱瘓，使用輪椅。長期復健中，每週三次物理治療。配偶為主要照顧者，身心壓力大。', lastDate:'2025年11月22日', needs:[{urgent:true,text:'輪椅老舊、前輪損壞，嚴重影響外出就醫'},{urgent:false,text:'配偶希望轉介喘息服務，每週至少一次'},{urgent:false,text:'家庭收入不穩，詢問職業輔導資源'}] },
+  chen: { name:'陳素貞女士', age:'82 歲', phone:'02-2391-5566', addr:'台北市中正區南海路 5 號 3 樓', type:'低收入戶・獨居老人', members:['本人（獨居）','女兒陳雅芳（在台中，每月探視）'], health:'慢性腎臟病第三期，每月洗腎二次。心臟瓣膜輕微問題，服藥控制中。近期食慾不振，體重下降約 3 公斤。', lastDate:'2025年12月5日', needs:[{urgent:true,text:'每日三餐無法自理，急需送餐服務'},{urgent:false,text:'洗腎交通費負擔重，需協助申請補助'},{urgent:false,text:'冬季暖氣費用偏高，希望電費補助'}] },
+  zhang:{ name:'張家（張明德、林淑華、張小恩）', age:'父38歲・母35歲・女7歲', phone:'0935-678-901', addr:'台北市文山區木柵路一段 200 號', type:'急難救助・單親家庭・兒童關懷', members:['父親張明德（38歲，工傷休養中）','母親林淑華（35歲，兼職）','女兒張小恩（7歲，小二）'], health:'父親工傷導致腰椎受傷，目前無法從事體力工作。母親輕度憂鬱，持續門診追蹤。女兒發展正常，但因家庭壓力偶有情緒問題。', lastDate:'2025年12月28日', needs:[{urgent:true,text:'房租逾期兩個月，面臨被迫搬遷風險'},{urgent:true,text:'女兒學費及營養午餐費無力繳交'},{urgent:false,text:'父親職業重建輔導，了解可申請資源'},{urgent:false,text:'家庭諮商服務，協助情緒支持'}] }
+};
+const outcomeData = {
+  wang: { decisions:[{type:'approved',label:'核准補助',text:'冬季慰問物資（衣物、毛毯）已於 2026年1月8日送達，由志工林志明親自交付並記錄。'},{type:'referral',label:'轉介資源',text:'已轉介台北市社會局居家照顧服務，預計每週二、四派員協助日常生活，約 2026年2月起啟動。'}], followups:['下次訪視前確認輔助拐杖更換情況（預計本次帶新拐杖前往）','追蹤居家照顧服務是否如期開始','評估是否申請緊急安置或長照資源'] },
+  li:   { decisions:[{type:'approved',label:'核准補助',text:'已核准輪椅修繕補助新台幣 8,000 元，轉介輔具中心，預計 2026年1月底完成修繕。'},{type:'referral',label:'轉介喘息服務',text:'已轉介台北市喘息服務，每週四安排照顧員到宅 4 小時，讓配偶獲得休息時間。'}], followups:['確認輪椅修繕進度是否如期完成','評估配偶身心壓力狀況，必要時轉介心理諮商','協助李先生洽詢職業輔導中心，了解在家工作可能性'] },
+  chen: { decisions:[{type:'approved',label:'核准送餐',text:'已協調慈濟志工每日午餐送餐服務，自 2026年1月10日起正式啟動，每日11:30 送達。'},{type:'approved',label:'電費補助',text:'核准冬季電費補助一次性新台幣 3,000 元，於 2026年1月15日以現金轉帳方式發放。'}], followups:['本次訪視重點：確認送餐服務是否順利，陳奶奶用餐情況','追蹤體重是否回升，必要時安排營養師諮詢','協助申請洗腎交通接送補助（尚未辦理，本次帶申請文件）'] },
+  zhang:{ decisions:[{type:'approved',label:'急難救助',text:'核准急難救助金新台幣 30,000 元，用於補繳房租，已於 2026年1月3日匯款至房東帳戶，避免強制搬遷。'},{type:'approved',label:'兒童助學',text:'張小恩學費及午餐費由慈濟助學金全額補助，已知會學校，效期至學年度結束。'},{type:'referral',label:'職業重建轉介',text:'已轉介勞動部職業重建服務，預計 2026年2月初安排評估，協助張明德規劃轉職方向。'}], followups:['確認張明德職業重建評估是否如期進行','關注林淑華憂鬱狀況，詢問門診追蹤情形','與張小恩短暫互動，了解在校情緒適應狀況','評估家庭後續經濟穩定性，決定是否持續補助'] }
+};
+
+// ── Init date ──
+const today = new Date();
+const dateStr = today.toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+document.getElementById('vol-date').textContent = dateStr;
+document.getElementById('mgr-date').textContent = dateStr;
+
+// ── Navigation ──
+function showScreen(id) {
+  document.getElementById('role-screen').style.display = 'none';
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showRole() {
+  document.getElementById('role-screen').style.display = 'flex';
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+}
+
+// ── Modals ──
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); });
+});
+
+function openQR(name) {
+  document.getElementById('qr-title').textContent = name + ' — 志工簽到';
+  document.getElementById('qr-sub').textContent = '請掃描 QR Code 完成本次訪視簽到';
+  document.getElementById('qr-id').textContent = Math.floor(Math.random()*90000+10000);
+  document.getElementById('qr-modal').classList.add('active');
+}
+function openRecord(name) {
+  document.getElementById('record-title').textContent = name + ' — 訪視記錄';
+  document.getElementById('record-sub').textContent = '選擇記錄方式';
+  document.getElementById('record-modal').classList.add('active');
+  setTimeout(initCanvas, 100);
+}
+function openPhoto(name) {
+  document.getElementById('photo-title').textContent = name + ' — 訪視照片';
+  document.getElementById('photo-sub').textContent = '請上傳本次訪視相關照片';
+  document.getElementById('photo-modal').classList.add('active');
+}
+function openProfile(key) {
+  const d = caseData[key];
+  document.getElementById('profile-name').textContent = d.name.split('（')[0];
+  document.getElementById('profile-sub').textContent = d.type;
+  document.getElementById('p-name').textContent = d.name;
+  document.getElementById('p-age').textContent = d.age;
+  document.getElementById('p-phone').textContent = d.phone;
+  document.getElementById('p-addr').textContent = d.addr;
+  document.getElementById('p-type').textContent = d.type;
+  document.getElementById('p-last-date').textContent = d.lastDate;
+  document.getElementById('p-health').textContent = d.health;
+  document.getElementById('p-members').innerHTML = d.members.map(m=>`<span class="member-chip">${m}</span>`).join('');
+  document.getElementById('p-needs').innerHTML = d.needs.map(n=>`<div class="need-item"><span class="need-badge ${n.urgent?'need-urgent':'need-normal'}">${n.urgent?'🔴 急需':'🟢 一般'}</span><div>${n.text}</div></div>`).join('');
+  document.getElementById('profile-modal').classList.add('active');
+}
+function openOutcome(key) {
+  const d = outcomeData[key], c = caseData[key];
+  document.getElementById('outcome-name').textContent = c.name.split('（')[0] + ' — 處遇結論';
+  document.getElementById('outcome-sub').textContent = '上次訪視（' + c.lastDate + '）後的決議';
+  const typeMap = {approved:'outcome-approved',referral:'outcome-referral'};
+  document.getElementById('o-decisions').innerHTML = d.decisions.map(dec=>`<div class="outcome-item ${typeMap[dec.type]||'outcome-approved'}"><div class="outcome-type">${dec.label}</div><div>${dec.text}</div></div>`).join('');
+  document.getElementById('o-followups').innerHTML = d.followups.map(f=>`<li>${f}</li>`).join('');
+  document.getElementById('outcome-modal').classList.add('active');
+}
+
+// ── Tab switch ──
+function switchTab(tab) {
+  document.getElementById('tab-morning').style.display = tab==='morning'?'block':'none';
+  document.getElementById('tab-afternoon').style.display = tab==='afternoon'?'block':'none';
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    b.classList.toggle('active',(i===0&&tab==='morning')||(i===1&&tab==='afternoon'));
+  });
+}
+
+// ── Canvas ──
+let canvas, ctx, drawing=false, penSize=2;
+function initCanvas() {
+  canvas = document.getElementById('draw-canvas');
+  if (!canvas) return;
+  canvas.width = canvas.parentElement.clientWidth - 4;
+  ctx = canvas.getContext('2d');
+  ctx.strokeStyle='#2d3a38'; ctx.lineWidth=penSize; ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.fillStyle='#fffef9'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  canvas.addEventListener('pointerdown',e=>{drawing=true;ctx.beginPath();getPos(e);});
+  canvas.addEventListener('pointermove',e=>{if(!drawing)return;const{x,y}=getPos(e);ctx.lineTo(x,y);ctx.stroke();});
+  canvas.addEventListener('pointerup',()=>drawing=false);
+  canvas.addEventListener('pointerleave',()=>drawing=false);
+}
+function getPos(e) {
+  const r=canvas.getBoundingClientRect();
+  const x=e.clientX-r.left,y=e.clientY-r.top;
+  ctx.moveTo(x,y); return{x,y};
+}
+function setPen(size,el) {
+  penSize=size; if(ctx)ctx.lineWidth=size;
+  document.querySelectorAll('.pen-size').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+}
+function clearCanvas() { if(ctx){ctx.fillStyle='#fffef9';ctx.fillRect(0,0,canvas.width,canvas.height);} }
+
+// ── Voice ──
+let isRecording=false, recognition=null;
+function toggleVoice() {
+  isRecording=!isRecording;
+  const btn=document.getElementById('voice-btn');
+  const status=document.getElementById('voice-status');
+  const transcript=document.getElementById('voice-transcript');
+  if(isRecording) {
+    btn.classList.add('recording'); btn.textContent='⏹️'; status.textContent='錄音中… 請開口說話';
+    if('webkitSpeechRecognition' in window||'SpeechRecognition' in window) {
+      const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+      recognition=new SR(); recognition.lang='zh-TW'; recognition.continuous=true; recognition.interimResults=true;
+      recognition.onresult=e=>{let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;transcript.textContent=t;};
+      recognition.start();
+    } else { transcript.textContent='（此瀏覽器不支援語音辨識，請改用 Chrome）'; }
+  } else {
+    btn.classList.remove('recording'); btn.textContent='🎙️'; status.textContent='錄音已停止，點擊重新開始';
+    if(recognition)recognition.stop();
+  }
+}
+function switchMethod(m) {
+  document.getElementById('method-handwrite').style.display=m==='handwrite'?'block':'none';
+  document.getElementById('method-voice').style.display=m==='voice'?'block':'none';
+  document.getElementById('btn-handwrite').classList.toggle('active',m==='handwrite');
+  document.getElementById('btn-voice').classList.toggle('active',m==='voice');
+  if(m==='handwrite')setTimeout(initCanvas,50);
+}
+
+// ── Photos ──
+function previewPhotos(input) {
+  const grid=document.getElementById('photo-grid'); grid.innerHTML='';
+  Array.from(input.files).forEach(file=>{
+    const div=document.createElement('div'); div.className='photo-thumb';
+    const img=document.createElement('img'); img.src=URL.createObjectURL(file);
+    div.appendChild(img); grid.appendChild(div);
+  });
+}
+function saveRecord() { closeModal('record-modal'); alert('✅ 訪視記錄已儲存！'); }
+function uploadPhotos() { closeModal('photo-modal'); alert('✅ 照片上傳成功！'); }
+</script>
+</body>
+</html>
